@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Casa de Eventos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #2E8B57; /* Verde ADA */
+            text-align: center;
+        }
+        h2 {
+            color: #2E8B57; /* Verde ADA */
+            margin-top: 40px;
+        }
+        #message {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        form {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        input[type="text"], input[type="date"] {
+            padding: 10px;
+            margin: 0 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            flex: 1; /* Permite que os inputs ocupem o espaço disponível */
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #2E8B57; /* Verde ADA */
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #247a4c; /* Verde escuro ao passar o mouse */
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between; /* Espaça o conteúdo do item da lista */
+            align-items: center; /* Centraliza verticalmente */
+        }
+        .remove-button {
+            background-color: #e74c3c; /* Vermelho para o botão de remover */
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .remove-button:hover {
+            background-color: #c0392b; /* Vermelho escuro ao passar o mouse */
+        }
+    </style>
+</head>
+<body>
+    <h1>Bem-vindo ao Sistema de Casa de Eventos</h1>
+    
+    <form id="eventForm">
+        <input type="text" id="eventName" placeholder="Nome do Evento" required>
+        <input type="date" id="eventDate" required>
+        <button type="submit">Cadastrar Evento</button>
+    </form>
+
+    <div id="message"></div>
+    
+    <h2>Eventos Cadastrados</h2>
+    <ul id="eventosList"></ul>
+
+    <script src="app.js"></script> <!-- Referência ao arquivo JavaScript -->
+</body>
+</html>
