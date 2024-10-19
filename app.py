@@ -1,8 +1,8 @@
 from flask import Flask, jsonify, request, render_template
-from flask_cors import CORS  # Importe o CORS
+from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)  # Habilite CORS para toda a aplicação
+CORS(app)  # Habilitar CORS para toda a aplicação
 
 # Armazenar eventos em uma lista (substitua por um banco de dados em produção)
 eventos = []
@@ -36,6 +36,12 @@ def manage_eventos():
 
     # Se for GET, retornar a lista de eventos
     return jsonify(eventos)
+
+@app.route('/eventos/<int:event_id>', methods=['DELETE'])
+def remove_evento(event_id):
+    global eventos
+    eventos = [evento for evento in eventos if evento['id'] != event_id]
+    return jsonify({"message": "Evento removido com sucesso!"}), 200
 
 if __name__ == '__main__':
     # Execute o Flask com host '0.0.0.0' para ser acessível de fora do contêiner

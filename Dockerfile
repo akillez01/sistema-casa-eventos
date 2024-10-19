@@ -14,8 +14,5 @@ COPY . .
 # Defina variáveis de ambiente (se necessário)
 ENV FLASK_APP=app.py
 
-# Exponha a porta que a aplicação utiliza
-EXPOSE 5000
-
-# Comando para iniciar a aplicação
+# Comando para iniciar a aplicação Flask
 CMD ["flask", "run", "--host=0.0.0.0"]
