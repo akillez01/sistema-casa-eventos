@@ -1,83 +1,92 @@
-// Seleciona elementos do DOM
-const eventForm = document.getElementById('eventForm');
-const eventosList = document.getElementById('eventosList');
-const messageDiv = document.getElementById('message');
+document.getElementById('eventForm').addEventListener('submit', async function (e) {
+    e.preventDefault(); // Previne o comportamento padrão do formulário
 
-// Adiciona um ouvinte de eventos para o formulário
-eventForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
+    let formData = new FormData();
+    formData.append('nome', document.getElementById('eventName').value);
+    formData.append('data', document.getElementById('eventDate').value);
+    formData.append('imagem', document.getElementById('eventImage').files[0]); // Upload da imagem
+    formData.append('video', document.getElementById('eventVideo').files[0]); // Upload do vídeo
 
-    // Obtém os valores dos inputs
-    const nome = document.getElementById('eventName').value;
-    const dataEvento = document.getElementById('eventDate').value; // Renomeado para evitar conflito
-
-    // Faz uma requisição POST para registrar o evento
     try {
-        const response = await fetch('/eventos', { // Remover o localhost para que funcione em produção
+        const response = await fetch('/eventos', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ nome, data: dataEvento }) // Usando a variável renomeada
+            body: formData
         });
-
-        if (!response.ok) {
-            throw new Error('Erro ao registrar evento');
+        
+        if (response.ok) {
+            const data = await response.json();
+            document.getElementById('message').textContent = "Evento cadastrado com sucesso!";
+            exibirEvento(data);
+        } else {
+            document.getElementById('message').textContent = "Erro ao cadastrar o evento.";
         }
-
-        const responseData = await response.json(); // Renomeando para evitar conflito
-        messageDiv.innerHTML = `<p style="color: green;">${responseData.message}</p>`;
-        addEventToList(responseData); // Adiciona o evento à lista
-        eventForm.reset(); // Limpa o formulário
     } catch (error) {
-        messageDiv.innerHTML = `<p style="color: red;">${error.message}</p>`;
+        console.error('Erro:', error);
     }
 });
 
-// Função para adicionar evento à lista na interface
-function addEventToList(evento) {
+// Função para exibir eventos e imagens cadastrados
+function exibirEvento(evento) {
+    const eventosList = document.getElementById('eventosList');
+    const galleryContainer = document.getElementById('galleryContainer');
+    const videoGalleryContainer = document.getElementById('videoGalleryContainer');
+
+    // Criar um item de lista para o evento
     const li = document.createElement('li');
-    li.textContent = `${evento.nome} - ${new Date(evento.data).toLocaleDateString()}`;
-    const removeButton = document.createElement('button');
-    removeButton.textContent = 'Remover';
-    removeButton.className = 'remove-button';
-    removeButton.onclick = () => {
-        removeEvent(evento.id, li);
-    };
-    li.appendChild(removeButton);
-    eventosList.appendChild(li);
-}
+    li.textContent = `${evento.nome} - ${evento.data}`;
 
-// Função para remover evento
-async function removeEvent(eventId, li) {
-    try {
-        const response = await fetch(`/eventos/${eventId}`, {
-            method: 'DELETE'
-        });
-
-        if (!response.ok) {
-            throw new Error('Erro ao remover evento');
+    // Criar botão de remoção
+    const removeBtn = document.createElement('button');
+    removeBtn.textContent = 'Remover';
+    removeBtn.classList.add('remove-button');
+    removeBtn.onclick = async () => {
+        const response = await fetch(`/eventos/${evento.id}`, { method: 'DELETE' });
+        if (response.ok) {
+            li.remove(); // Remove o evento da lista
+            // Remover a imagem e o vídeo da galeria
+            if (evento.imagemUrl) {
+                const imgToRemove = galleryContainer.querySelector(`img[src="${evento.imagemUrl}"]`);
+                if (imgToRemove) imgToRemove.remove();
+            }
+            if (evento.videoUrl) {
+                const videoToRemove = videoGalleryContainer.querySelector(`video[src="${evento.videoUrl}"]`);
+                if (videoToRemove) videoToRemove.remove();
+            }
         }
+    };
 
-        eventosList.removeChild(li); // Remove o evento da lista
-    } catch (error) {
-        messageDiv.innerHTML = `<p style="color: red;">${error.message}</p>`;
+    li.appendChild(removeBtn);
+    eventosList.appendChild(li);
+
+    // Exibir imagem se disponível
+    if (evento.imagemUrl) {
+        const img = document.createElement('img');
+        img.src = evento.imagemUrl;
+        img.alt = evento.nome;
+        img.classList.add('gallery-image');
+        galleryContainer.appendChild(img);
     }
-}
 
-// Função para carregar eventos existentes
-async function loadEvents() {
-    try {
-        const response = await fetch('/eventos'); // Remover o localhost para que funcione em produção
-        const eventos = await response.json();
-
-        eventos.forEach(evento => {
-            addEventToList(evento);
-        });
-    } catch (error) {
-        messageDiv.innerHTML = `<p style="color: red;">Erro ao carregar eventos: ${error.message}</p>`;
+    // Exibir vídeo se disponível
+    if (evento.videoUrl) {
+        const video = document.createElement('video');
+        video.src = evento.videoUrl;
+        video.controls = true; // Adiciona controles de reprodução
+        video.classList.add('video-frame');
+        videoGalleryContainer.appendChild(video);
     }
-}
+};
 
-// Carrega eventos ao iniciar a aplicação
-loadEvents();
+// Lógica para enviar e exibir comentários
+document.getElementById('submitComment').addEventListener('click', function () {
+    const comment = document.getElementById('comment').value;
+    if (comment) {
+        const commentsList = document.getElementById('commentsList');
+        const li = document.createElement('li');
+        li.textContent = comment;
+        commentsList.appendChild(li);
+        document.getElementById('comment').value = ''; // Limpar a caixa de comentário
+    } else {
+        alert("Por favor, digite um comentário.");
+    }
+});

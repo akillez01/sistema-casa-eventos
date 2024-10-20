@@ -1,8 +1,14 @@
-from flask import Flask, jsonify, request, render_template
+import os
+from flask import Flask, jsonify, request, render_template, url_for
 from flask_cors import CORS
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 CORS(app)  # Habilitar CORS para toda a aplicação
+
+# Pasta onde as imagens e vídeos serão armazenados
+UPLOAD_FOLDER = 'static/uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Armazenar eventos em uma lista (substitua por um banco de dados em produção)
 eventos = []
@@ -10,29 +16,45 @@ id_counter = 1  # Contador para gerar IDs únicos
 
 @app.route('/')
 def home():
-    return render_template('index.html')  # Renderize o template HTML
+    return render_template('index.html')
 
 @app.route('/eventos', methods=['GET', 'POST'])
 def manage_eventos():
     global id_counter
     if request.method == 'POST':
-        data = request.json
-        app.logger.info(f'Recebendo dados para cadastro: {data}')  # Log dos dados recebidos
+        nome = request.form.get('nome')
+        data = request.form.get('data')
+        imagem = request.files.get('imagem')
+        video = request.files.get('video')
+
+        if not nome or not data or not imagem:
+            return jsonify({"error": "Nome, data e imagem são necessários."}), 400
+
+        # Salvar a imagem
+        filename = secure_filename(imagem.filename)
+        imagem.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         
-        # Verificar se os dados necessários estão presentes
-        if 'nome' not in data or 'data' not in data:
-            app.logger.error('Dados faltando no cadastro.')
-            return jsonify({"error": "Nome e data do evento são necessários."}), 400
-        
+        imagem_url = url_for('static', filename=f'uploads/{filename}')
+
+        # Salvar o vídeo se houver
+        video_url = None
+        if video:
+            video_filename = secure_filename(video.filename)
+            video.save(os.path.join(app.config['UPLOAD_FOLDER'], video_filename))
+            video_url = url_for('static', filename=f'uploads/{video_filename}')
+
         evento = {
             "id": id_counter,
-            "nome": data['nome'],
-            "data": data['data']
+            "nome": nome,
+            "data": data,
+            "imagemUrl": imagem_url,
+            "videoUrl": video_url
         }
+
         eventos.append(evento)
-        id_counter += 1  # Incrementar o contador para o próximo evento
-        app.logger.info(f'Evento cadastrado: {evento}')  # Log do evento cadastrado
-        return jsonify(evento), 201  # Retornar o evento criado
+        id_counter += 1
+
+        return jsonify(evento), 201
 
     # Se for GET, retornar a lista de eventos
     return jsonify(eventos)
@@ -44,5 +66,4 @@ def remove_evento(event_id):
     return jsonify({"message": "Evento removido com sucesso!"}), 200
 
 if __name__ == '__main__':
-    # Execute o Flask com host '0.0.0.0' para ser acessível de fora do contêiner
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True)
